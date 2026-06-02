@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from '@tanstack/react-router';
-import { LayoutCard } from '../components/ui/LayoutCard';
-import { Button } from '../components/ui/Button';
+import { LayoutCard } from '@/components/ui/LayoutCard';
+import { Button } from '@/components/ui/Button';
 
 export const Route = createFileRoute('/')({
     component: IndexComponent,

@@ -1,17 +1,19 @@
 import * as React from 'react';
-import { createFileRoute, useNavigate } from '@tanstack/react-router';
+import { createFileRoute, useNavigate, redirect } from '@tanstack/react-router';
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import { z } from 'zod';
-import { ProductSchema, type Product } from '../schemas/product.schema';
-import { LayoutCard } from '../components/ui/LayoutCard';
-import { Button } from '../components/ui/Button';
-import { Badge } from '../components/ui/Badge';
-import { useAuth } from '../contexts/AuthContext';
-import { useCategories } from '../hooks/useCategories';
+import { ProductSchema, type Product } from '@/schemas/product.schema';
+import { LayoutCard } from '@/components/ui/LayoutCard';
+import { Button } from '@/components/ui/Button';
+import { Badge } from '@/components/ui/Badge';
+import { useCategories } from '@/hooks/useCategories';
 import { useRecoilState, useSetRecoilState } from 'recoil';
-import { favoritesState } from '../state/favoritesState';
-import { productIndexState } from '../state/productIndexState';
-import { cartState } from '../state/cartState';
+import { favoritesState } from '@/state/favoritesState';
+import { productIndexState } from '@/state/productIndexState';
+import { cartState } from '@/state/cartState';
+import { uiSettingsState } from '@/state/uiSettingsState';
+import { useRecoilValue } from 'recoil';
+import { viewModeSelector } from '@/state/selectors';
 
 // Схема для поисковых параметров с валидацией
 const SearchSchema = z.object({
@@ -46,6 +48,13 @@ export const Route = createFileRoute('/catalog')({
         }
 
         return result.data;
+    },
+    beforeLoad: ({ context }) => {
+        if (!context.auth?.state?.isAuthenticated) {
+            throw redirect({
+                to: '/login',
+            });
+        }
     },
     component: CatalogComponent,
 });
@@ -82,12 +91,14 @@ const deleteProductAPI = async (_: number): Promise<void> => {
 };
 
 function CatalogComponent() {
-    const { state: authState } = useAuth();
     const navigate = useNavigate();
     const queryClient = useQueryClient();
     const [favorites, setFavorites] = useRecoilState(favoritesState);
     const setCart = useSetRecoilState(cartState);
     const setProductIndex = useSetRecoilState(productIndexState);
+    const [uiSettings, setUiSettings] = useRecoilState(uiSettingsState);
+    const viewMode = uiSettings.viewMode;
+    const viewModeStyles = useRecoilValue(viewModeSelector);
 
     // Используем useSearch для доступа к параметрам
     const searchParams = Route.useSearch();
@@ -161,12 +172,6 @@ function CatalogComponent() {
     };
 
     React.useEffect(() => {
-        if (!authState.isAuthenticated) {
-            navigate({ to: '/login' });
-        }
-    }, [authState.isAuthenticated, navigate]);
-
-    React.useEffect(() => {
         if (!productsData?.products) return;
 
         setProductIndex(prev => {
@@ -228,11 +233,13 @@ function CatalogComponent() {
     const selectedCategoryName = selectedCategory?.name;
 
     return (
-        <div style={{ display: 'grid', gap: '16px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             {/* Индикатор статуса кэша */}
             <div style={{
                 padding: '12px',
-                backgroundColor: isDataStale ? '#fee2e2' : '#dcfce7',
+                backgroundColor: isDataStale ? 'color-mix(in srgb, var(--danger) 15%, var(--card))'
+                    : 'color-mix(in srgb, var(--success) 15%, var(--card))',
+                color: 'var(--text)',
                 borderRadius: '8px',
                 fontSize: '14px',
                 display: 'flex',
@@ -265,9 +272,10 @@ function CatalogComponent() {
                                 width: '100%',
                                 padding: '8px 12px',
                                 borderRadius: '8px',
-                                border: '1px solid #d1d5db',
+                                border: '1px solid var(--border)',
                                 fontSize: '14px',
-                                backgroundColor: 'white',
+                                backgroundColor: 'var(--card)',
+                                color: 'var(--text)',
                             }}
                         >
                             <option value="">Все категории</option>
@@ -307,62 +315,137 @@ function CatalogComponent() {
                     (Страница {page} из {totalPages})
                 </span>
             </div>
+            <LayoutCard title="Настройки интерфейса">
+                <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
 
-            {/* Список товаров */}
-            {products.map((product) => {
-                const productCategory = categories?.find(c => c.slug === product.category);
-                const productCategoryName = productCategory?.name || product.category;
-                return (
-                    <LayoutCard
-                        key={product.id}
-                        title={
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                <span>Товар: {product.title}</span>
-                                <div style={{ display: 'flex', gap: '8px' }}>
-                                    <Badge color="green" text={productCategoryName} />
-                                    <Badge color="blue" text={`ID: ${product.id}`} />
+                    {/* VIEW MODE */}
+                    <div>
+                        <strong>Режим отображения:</strong>
+                        <div style={{ display: 'flex', gap: 8, marginTop: 6 }}>
+                            <Button
+                                variant={viewMode === 'grid' ? 'primary' : 'secondary'}
+                                size="small"
+                                onClick={() =>
+                                    setUiSettings((prev) => ({
+                                        ...prev,
+                                        viewMode: 'grid',
+                                    }))
+                                }
+                            >
+                                Сетка
+                            </Button>
+
+                            <Button
+                                variant={viewMode === 'list' ? 'primary' : 'secondary'}
+                                size="small"
+                                onClick={() =>
+                                    setUiSettings((prev) => ({
+                                        ...prev,
+                                        viewMode: 'list',
+                                    }))
+                                }
+                            >
+                                Список
+                            </Button>
+                        </div>
+                    </div>
+
+                    {/* THEME */}
+                    <div>
+                        <strong>Тема:</strong>
+                        <div style={{ display: 'flex', gap: 8, marginTop: 6 }}>
+                            <Button
+                                variant={uiSettings.theme === 'light' ? 'primary' : 'secondary'}
+                                size="small"
+                                onClick={() =>
+                                    setUiSettings((prev) => ({
+                                        ...prev,
+                                        theme: 'light',
+                                    }))
+                                }
+                            >
+                                Light
+                            </Button>
+
+                            <Button
+                                variant={uiSettings.theme === 'dark' ? 'primary' : 'secondary'}
+                                size="small"
+                                onClick={() =>
+                                    setUiSettings((prev) => ({
+                                        ...prev,
+                                        theme: 'dark',
+                                    }))
+                                }
+                            >
+                                Dark
+                            </Button>
+                        </div>
+                    </div>
+
+                </div>
+            </LayoutCard>
+
+            <div style={viewModeStyles.containerStyle}>
+                {/* Список товаров */}
+                {products.map((product) => {
+                    const productCategory = categories?.find(c => c.slug === product.category);
+                    const productCategoryName = productCategory?.name || product.category;
+                    return (
+                        <LayoutCard
+                            key={product.id}
+                            title={
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <span>Товар: {product.title}</span>
+                                    <div style={{ display: 'flex', gap: '8px' }}>
+                                        <Badge color="green" text={productCategoryName} />
+                                        <Badge color="blue" text={`ID: ${product.id}`} />
+                                    </div>
                                 </div>
+                            }
+                        >
+                            <div style={{ marginBottom: 12 }}>
+                                <strong>Цена:</strong> ${product.price}
                             </div>
-                        }
-                    >
-                        <div style={{ marginBottom: 12 }}>
-                            <strong>Цена:</strong> ${product.price}
-                        </div>
-                        <div style={{ display: 'flex', gap: 8 }}>
-                            <Button
-                                variant={favorites.includes(product.id) ? 'primary' : 'secondary'}
-                                size="small"
-                                onClick={() => toggleFavorite(product.id)}
-                            >
-                                ❤️
-                            </Button>
-                            <Button
-                                variant="primary"
-                                size="small"
-                                onClick={() => addToCart(product.id)}
-                            >
-                                🛒 В корзину
-                            </Button>
-                            <Button
-                                variant="secondary"
-                                size="small"
-                                onClick={() => navigate({ to: `/product/${product.id}` })}
-                            >
-                                Подробнее
-                            </Button>
-                            <Button
-                                variant="danger"
-                                size="small"
-                                onClick={() => deleteMutation.mutate(product.id)}
-                                isLoading={deleteMutation.isPending}
-                            >
-                                Удалить
-                            </Button>
-                        </div>
-                    </LayoutCard>
-                );
-            })}
-
+                            <div style={{ display: 'flex', gap: 8 }}>
+                                <Button
+                                    variant={favorites.includes(product.id) ? 'primary' : 'secondary'}
+                                    size="small"
+                                    onClick={() => toggleFavorite(product.id)}
+                                >
+                                    ❤️
+                                </Button>
+                                <Button
+                                    variant="primary"
+                                    size="small"
+                                    onClick={() => addToCart(product.id)}
+                                >
+                                    🛒 В корзину
+                                </Button>
+                                <Button
+                                    variant="secondary"
+                                    size="small"
+                                    onClick={() => navigate({ to: `/product/${product.id}` })}
+                                >
+                                    Подробнее
+                                </Button>
+                                <Button
+                                    variant="danger"
+                                    size="small"
+                                    onClick={() => deleteMutation.mutate(product.id)}
+                                    isLoading={deleteMutation.isPending}
+                                >
+                                    Удалить
+                                </Button>
+                            </div>
+                        </LayoutCard>
+                    );
+                })}
+            </div>
+            {products.length === 0 && (
+                <LayoutCard title="Ничего не найдено">
+                    <div>Попробуйте выбрать другую категорию</div>
+                </LayoutCard>
+            )}
             {/* Пагинация */}
             {totalPages > 1 && (
                 <div style={{
@@ -414,12 +497,6 @@ function CatalogComponent() {
                         &gt;
                     </Button>
                 </div>
-            )}
-
-            {products.length === 0 && (
-                <LayoutCard title="Ничего не найдено">
-                    <div>Попробуйте выбрать другую категорию</div>
-                </LayoutCard>
             )}
         </div>
     );

@@ -2,7 +2,7 @@
     border: none;
     border-radius: 8px;
     cursor: pointer;
-    color: white;
+    color: var(--text-inverse, white);
     transition: 0.2s;
     display: inline-flex;
     align-items: center;
@@ -16,7 +16,7 @@
 }
 
 .button:active {
-    transform: scale(0.98);      /* Эффект нажатия */
+    transform: scale(0.98);
 }
 
 .button:disabled {
@@ -24,20 +24,21 @@
     cursor: not-allowed;
 }
 
-/* Цветовые варианты */
 .primary {
-    background: #2563eb;
+    background: var(--primary);
+    color: white;
 }
 
 .secondary {
-    background: #6b7280;
+    background: var(--border);
+    color: var(--text);
 }
 
 .danger {
     background: #dc2626;
+    color: white;
 }
 
-/* Размеры */
 .small {
     padding: 8px 12px;
     font-size: 12px;
@@ -53,7 +54,6 @@
     font-size: 16px;
 }
 
-/* Состояние загрузки */
 .loading {
     opacity: 0.7;
     cursor: not-allowed;
@@ -71,33 +71,34 @@
 
 .outlined {
     background: transparent;
-    border: 2px solid currentColor;
+    border: 2px solid var(--border);
+    color: var(--text);
 }
 
 .outlined.primary {
-    color: #2563eb;
-    background: transparent;
+    color: var(--primary);
+    border-color: var(--primary);
 }
 
 .outlined.secondary {
-    color: #6b7280;
-    background: transparent;
+    color: var(--text);
+    border-color: var(--border);
 }
 
 .outlined.danger {
     color: #dc2626;
-    background: transparent;
+    border-color: #dc2626;
 }
 
 .outlined:hover {
-    background: rgba(0, 0, 0, 0.05);
+    background: var(--card);
 }
 
 .text {
     background: transparent;
-    color: #2563eb;
+    color: var(--primary);
 }
 
 .text:hover {
-    background: rgba(37, 99, 235, 0.1);
+    background: color-mix(in srgb, var(--primary) 15%, transparent);
 }

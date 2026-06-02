@@ -7,6 +7,9 @@ import { QueryClientProvider } from '@tanstack/react-query';
 // Импортируем сгенерированное дерево маршрутов
 import { routeTree } from './routeTree.gen';
 
+// Импортируем стили для темы
+import '@/styles/theme.css';
+
 // Импортируем провайдеры
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import type { AuthContextType } from './contexts/AuthContext';
@@ -22,19 +25,15 @@ const router = createRouter({
     },
 });
 
-function RouterWithAuth() {
+function AppRouter() {
     const auth = useAuth();
 
-    React.useEffect(() => {
-        router.update({
-            context: {
-                queryClient,
-                auth,
-            },
-        });
-    }, [auth]);
-
-    return <RouterProvider router={router} />;
+    return (
+        <RouterProvider
+            router={router}
+            context={{ auth, queryClient }}
+        />
+    );
 }
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
@@ -42,7 +41,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
         <QueryClientProvider client={queryClient}>
             <RecoilRoot>
                 <AuthProvider>
-                    <RouterWithAuth />
+                    <AppRouter />
                 </AuthProvider>
             </RecoilRoot>
         </QueryClientProvider>

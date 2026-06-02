@@ -1,9 +1,14 @@
 import { atom } from 'recoil';
 
-export const uiSettingsState = atom<{
-    viewMode: 'grid' | 'list';
-    theme: 'light' | 'dark';
-}>({
+export type ViewMode = 'grid' | 'list';
+export type ThemeMode = 'light' | 'dark';
+
+export interface UiSettingsState {
+    viewMode: ViewMode;
+    theme: ThemeMode;
+}
+
+export const uiSettingsState = atom<UiSettingsState>({
     key: 'uiSettingsState',
     default: {
         viewMode: 'grid',

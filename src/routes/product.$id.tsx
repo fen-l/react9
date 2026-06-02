@@ -3,12 +3,12 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import type { QueryClient } from '@tanstack/react-query';
 import { ProductSchema, type Product } from '../schemas/product.schema';
-import { LayoutCard } from '../components/ui/LayoutCard';
-import { Button } from '../components/ui/Button';
-import { Input } from '../components/ui/Input';
-import { Badge } from '../components/ui/Badge';
-import { useAuth } from '../contexts/AuthContext';
-import { useCategories } from '../hooks/useCategories';
+import { LayoutCard } from '@/components/ui/LayoutCard';
+import { Button } from '@/components/ui/Button';
+import { Input } from '@/components/ui/Input';
+import { Badge } from '@/components/ui/Badge';
+import { useAuth } from '@/contexts/AuthContext';
+import { useCategories } from '@/hooks/useCategories';
 
 interface RouterContext {
   queryClient: QueryClient;

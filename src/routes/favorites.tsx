@@ -1,11 +1,11 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { useRecoilState, useRecoilValue } from 'recoil';
-import { favoritesState } from '../state/favoritesState';
-import { cartState } from '../state/cartState';
-import { favoritesProductsSelector } from '../state/selectors';
+import { favoritesState } from '@/state/favoritesState';
+import { cartState } from '@/state/cartState';
+import { favoritesProductsSelector } from '@/state/selectors';
 
-import { Button } from '../components/ui/Button';
-import { LayoutCard } from '../components/ui/LayoutCard';
+import { Button } from '@/components/ui/Button';
+import { LayoutCard } from '@/components/ui/LayoutCard';
 
 export const Route = createFileRoute('/favorites')({
   component: FavoritesPage,

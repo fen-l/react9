@@ -1,9 +1,9 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { useRecoilState, useRecoilValue } from 'recoil';
-import { cartState } from '../state/cartState';
-import { cartProductsSelector } from '../state/selectors';
-import { Button } from '../components/ui/Button';
-import { LayoutCard } from '../components/ui/LayoutCard';
+import { cartState } from '@/state/cartState';
+import { cartProductsSelector } from '@/state/selectors';
+import { Button } from '@/components/ui/Button';
+import { LayoutCard } from '@/components/ui/LayoutCard';
 
 export const Route = createFileRoute('/cart')({
   component: CartPage,

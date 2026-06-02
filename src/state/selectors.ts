@@ -2,6 +2,7 @@ import { selector } from 'recoil';
 import { cartState } from './cartState';
 import { favoritesState } from './favoritesState';
 import { productIndexState } from './productIndexState';
+import { uiSettingsState } from './uiSettingsState';
 
 export const cartCountState = selector<number>({
     key: 'cartCountState',
@@ -28,6 +29,7 @@ export const cartProductsSelector = selector({
     get: ({ get }) => {
         const cart = get(cartState);
         const index = get(productIndexState);
+        const isNotNull = <T>(value: T | null): value is T => value !== null;
 
         return cart
             .map(item => {
@@ -39,6 +41,24 @@ export const cartProductsSelector = selector({
                     quantity: item.quantity,
                 };
             })
-            .filter(Boolean);
+            .filter(isNotNull);
+    },
+});
+
+export const viewModeSelector = selector({
+    key: 'viewModeSelector',
+    get: ({ get }) => {
+        const { viewMode } = get(uiSettingsState);
+
+        return {
+            containerStyle: {
+                display: 'grid',
+                gap: '16px',
+                gridTemplateColumns:
+                    viewMode === 'grid'
+                        ? 'repeat(2, 1fr)'
+                        : '1fr',
+            },
+        };
     },
 });

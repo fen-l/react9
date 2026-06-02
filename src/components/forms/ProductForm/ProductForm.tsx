@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { useProducts } from "../../../contexts/ProductContext";
-import { Product, ProductSchema } from "../../../schemas/product.schema";
+import { useProducts } from "@/contexts/ProductContext";
+import { type Product, ProductSchema } from "@/schemas/product.schema";
 
 import { Button } from "../../ui/Button";
 import { Input } from "../../ui/Input";
@@ -19,6 +19,7 @@ export const ProductForm: React.FC<Props> = ({
     const [form, setForm] = useState({
         id: 0,
         title: "",
+        category: "",
         price: 0,
     });
 

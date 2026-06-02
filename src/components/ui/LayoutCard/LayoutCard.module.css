@@ -1,22 +1,26 @@
 .card {
-    border: 1px solid #e2e8f0;
+    border: 1px solid var(--border);
     border-radius: 12px;
     overflow: hidden;
-    background: white;
+    background: var(--card);
+    color: var(--text);
 }
 
 .header {
     padding: 16px;
     font-weight: 700;
-    border-bottom: 1px solid #e2e8f0;
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
 }
 
 .content {
     padding: 16px;
+    color: var(--text);
 }
 
 .footer {
     padding: 16px;
-    border-top: 1px solid #e2e8f0;
-    background: #f8fafc;
+    border-top: 1px solid var(--border);
+    background: var(--bg);
+    color: var(--text);
 }
