@@ -270,12 +270,12 @@ function LoginComponent() {
                             }
                             style={{
                                 width: '100%',
-                                padding: '10px 12px',
-                                borderRadius: '6px',
-                                border: state.errors.occupation ? '2px solid red' : '1px solid #ccc',
-                                fontSize: '16px',
-                                backgroundColor: 'white',
-                                minHeight: '44px',
+                                padding: '8px 12px',
+                                borderRadius: '8px',
+                                border: '1px solid var(--border)',
+                                fontSize: '14px',
+                                backgroundColor: 'var(--card)',
+                                color: 'var(--text)',
                             }}
                         >
                             <option value="" disabled>
