@@ -12,7 +12,6 @@ export const Route = createFileRoute('/login')({
 });
 
 /* 1. ZOD SCHEMA */
-
 const LoginSchema = z.object({
     email: z.string().email('Некорректный email'),
     password: z.string().min(8, 'Пароль должен содержать минимум 8 символов'),
@@ -24,10 +23,23 @@ const LoginSchema = z.object({
     }),
 });
 
+const occupations = [
+    { value: "", label: "Выберите профессию" },
+    { value: "programmer", label: "Программист" },
+    { value: "designer", label: "Дизайнер" },
+    { value: "marketer", label: "Маркетолог" },
+    { value: "manager", label: "Менеджер" },
+    { value: "teacher", label: "Учитель" },
+    { value: "doctor", label: "Врач" },
+    { value: "lawyer", label: "Юрист" },
+    { value: "accountant", label: "Бухгалтер" },
+    { value: "student", label: "Студент" },
+    { value: "other", label: "Другое" },
+];
+
 type FormData = z.infer<typeof LoginSchema>;
 
 /* 2. STATE */
-
 interface IFormState {
     currentStep: 1 | 2 | 3;
     formData: FormData;
@@ -36,30 +48,14 @@ interface IFormState {
 }
 
 type TFormAction =
-    | {
-          type: 'UPDATE_FIELD';
-          field: keyof FormData;
-          value: FormData[keyof FormData];
-      }
-    | {
-          type: 'SET_ERRORS';
-          errors: Record<string, string>;
-      }
-    | {
-          type: 'NEXT_STEP';
-      }
-    | {
-          type: 'PREV_STEP';
-      }
-    | {
-          type: 'SUBMIT_START';
-      }
-    | {
-          type: 'SUBMIT_SUCCESS';
-      };
+    | { type: 'UPDATE_FIELD'; field: keyof FormData; value: FormData[keyof FormData] }
+    | { type: 'SET_ERRORS'; errors: Record<string, string> }
+    | { type: 'NEXT_STEP' }
+    | { type: 'PREV_STEP' }
+    | { type: 'SUBMIT_START' }
+    | { type: 'SUBMIT_SUCCESS' };
 
 /* 3. INITIAL STATE */
-
 const initialState: IFormState = {
     currentStep: 1,
     isSubmitting: false,
@@ -75,11 +71,7 @@ const initialState: IFormState = {
 };
 
 /* 4. REDUCER */
-
-function loginReducer(
-    state: IFormState,
-    action: TFormAction
-): IFormState {
+function loginReducer(state: IFormState, action: TFormAction): IFormState {
     switch (action.type) {
         case 'UPDATE_FIELD':
             return {
@@ -113,16 +105,10 @@ function loginReducer(
             };
 
         case 'SUBMIT_START':
-            return {
-                ...state,
-                isSubmitting: true,
-            };
+            return { ...state, isSubmitting: true };
 
         case 'SUBMIT_SUCCESS':
-            return {
-                ...state,
-                isSubmitting: false,
-            };
+            return { ...state, isSubmitting: false };
 
         default:
             return state;
@@ -130,34 +116,24 @@ function loginReducer(
 }
 
 /* 5. HELPERS */
-
 const formatZodErrors = (issues: z.ZodIssue[]) => {
     const errors: Record<string, string> = {};
-
     issues.forEach((issue) => {
         const field = issue.path[0] as string;
         errors[field] = issue.message;
     });
-
     return errors;
 };
 
 /* 6. COMPONENT */
-
 function LoginComponent() {
     const { dispatch, state: authState } = useAuth();
     const navigate = useNavigate();
 
-    const [state, formDispatch] = React.useReducer(
-        loginReducer,
-        initialState
-    );
+    const [state, formDispatch] = React.useReducer(loginReducer, initialState);
 
     const catalogSearchParams = React.useMemo(() => {
-        const saved = localStorage.getItem(
-            'catalog_search_params'
-        );
-
+        const saved = localStorage.getItem('catalog_search_params');
         if (saved) {
             try {
                 return JSON.parse(saved);
@@ -165,48 +141,28 @@ function LoginComponent() {
                 return {};
             }
         }
-
         return {};
     }, []);
 
     React.useEffect(() => {
         if (authState.isAuthenticated) {
-            navigate({
-                to: '/catalog',
-                search: catalogSearchParams,
-            });
+            navigate({ to: '/catalog', search: catalogSearchParams });
         }
-    }, [
-        authState.isAuthenticated,
-        navigate,
-        catalogSearchParams,
-    ]);
+    }, [authState.isAuthenticated, navigate, catalogSearchParams]);
 
     const validateStep = (step: number) => {
         let schema;
 
         switch (step) {
             case 1:
-                schema = LoginSchema.pick({
-                    email: true,
-                    password: true,
-                });
+                schema = LoginSchema.pick({ email: true, password: true });
                 break;
-
             case 2:
-                schema = LoginSchema.pick({
-                    username: true,
-                    city: true,
-                });
+                schema = LoginSchema.pick({ username: true, city: true });
                 break;
-
             case 3:
-                schema = LoginSchema.pick({
-                    occupation: true,
-                    agree: true,
-                });
+                schema = LoginSchema.pick({ occupation: true, agree: true });
                 break;
-
             default:
                 return true;
         }
@@ -216,101 +172,55 @@ function LoginComponent() {
         if (!result.success) {
             formDispatch({
                 type: 'SET_ERRORS',
-                errors: formatZodErrors(
-                    result.error.issues
-                ),
+                errors: formatZodErrors(result.error.issues),
             });
-
             return false;
         }
 
-        formDispatch({
-            type: 'SET_ERRORS',
-            errors: {},
-        });
-
+        formDispatch({ type: 'SET_ERRORS', errors: {} });
         return true;
     };
 
     const handleNext = () => {
         if (validateStep(state.currentStep)) {
-            formDispatch({
-                type: 'NEXT_STEP',
-            });
+            formDispatch({ type: 'NEXT_STEP' });
         }
     };
 
     const handlePrev = () => {
-        formDispatch({
-            type: 'PREV_STEP',
-        });
+        formDispatch({ type: 'PREV_STEP' });
     };
 
     const handleSubmit = () => {
-        if (!validateStep(3)) {
-            return;
-        }
+        if (!validateStep(3)) return;
 
-        formDispatch({
-            type: 'SUBMIT_START',
-        });
+        formDispatch({ type: 'SUBMIT_START' });
 
-        const user = {
-            username: state.formData.username.trim(),
-        };
+        const user = { username: state.formData.username.trim() };
+        localStorage.setItem('user', JSON.stringify(user));
+        dispatch({ type: 'LOGIN', payload: user });
 
-        localStorage.setItem(
-            'user',
-            JSON.stringify(user)
-        );
-
-        dispatch({
-            type: 'LOGIN',
-            payload: user,
-        });
-
-        formDispatch({
-            type: 'SUBMIT_SUCCESS',
-        });
+        formDispatch({ type: 'SUBMIT_SUCCESS' });
     };
 
     return (
         <LayoutCard
             title={
-                <div
-                    style={{
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                    }}
-                >
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                     <span>Авторизация</span>
-
-                    <span>
-                        Шаг {state.currentStep} из 3
-                    </span>
+                    <span>Шаг {state.currentStep} из 3</span>
                 </div>
             }
             footer={
-                <div
-                    style={{
-                        display: 'flex',
-                        gap: '8px',
-                    }}
-                >
+                <div style={{ display: 'flex', gap: '8px' }}>
                     {state.currentStep > 1 && (
-                        <Button
-                            variant="secondary"
-                            onClick={handlePrev}
-                        >
+                        <Button variant="secondary" onClick={handlePrev}>
                             Назад
                         </Button>
                     )}
 
                     {state.currentStep < 3 && (
-                        <Button
-                            variant="primary"
-                            onClick={handleNext}
-                        >
+                        <Button variant="primary" onClick={handleNext}>
                             Далее
                         </Button>
                     )}
@@ -329,92 +239,65 @@ function LoginComponent() {
         >
             {state.currentStep === 1 && (
                 <>
-                    <Input
-                        label="Email"
-                        value={state.formData.email}
-                        onChange={(e) =>
-                            formDispatch({
-                                type: 'UPDATE_FIELD',
-                                field: 'email',
-                                value: e.target.value,
-                            })
-                        }
-                        error={state.errors.email}
-                        isFullWidth
-                    />
-
-                    <Input
-                        label="Пароль"
-                        type="password"
-                        value={state.formData.password}
-                        onChange={(e) =>
-                            formDispatch({
-                                type: 'UPDATE_FIELD',
-                                field: 'password',
-                                value: e.target.value,
-                            })
-                        }
-                        error={state.errors.password}
-                        isFullWidth
-                    />
+                    <Input label="Email" value={state.formData.email} onChange={(e) => formDispatch({ type: 'UPDATE_FIELD', field: 'email', value: e.target.value })} error={state.errors.email} isFullWidth />
+                    <Input label="Пароль" type="password" value={state.formData.password} onChange={(e) => formDispatch({ type: 'UPDATE_FIELD', field: 'password', value: e.target.value })} error={state.errors.password} isFullWidth />
                 </>
             )}
 
             {state.currentStep === 2 && (
                 <>
-                    <Input
-                        label="Имя пользователя"
-                        value={state.formData.username}
-                        onChange={(e) =>
-                            formDispatch({
-                                type: 'UPDATE_FIELD',
-                                field: 'username',
-                                value: e.target.value,
-                            })
-                        }
-                        error={state.errors.username}
-                        isFullWidth
-                    />
-
-                    <Input
-                        label="Город"
-                        value={state.formData.city}
-                        onChange={(e) =>
-                            formDispatch({
-                                type: 'UPDATE_FIELD',
-                                field: 'city',
-                                value: e.target.value,
-                            })
-                        }
-                        error={state.errors.city}
-                        isFullWidth
-                    />
+                    <Input label="Имя пользователя" value={state.formData.username} onChange={(e) => formDispatch({ type: 'UPDATE_FIELD', field: 'username', value: e.target.value })} error={state.errors.username} isFullWidth />
+                    <Input label="Город" value={state.formData.city} onChange={(e) => formDispatch({ type: 'UPDATE_FIELD', field: 'city', value: e.target.value })} error={state.errors.city} isFullWidth />
                 </>
             )}
 
+            {/* ==================== ИСПРАВЛЕННЫЙ 3-Й ШАГ ==================== */}
             {state.currentStep === 3 && (
                 <>
-                    <Input
-                        label="Профессия"
-                        value={state.formData.occupation}
-                        onChange={(e) =>
-                            formDispatch({
-                                type: 'UPDATE_FIELD',
-                                field: 'occupation',
-                                value: e.target.value,
-                            })
-                        }
-                        error={state.errors.occupation}
-                        isFullWidth
-                    />
+                    <div style={{ marginBottom: '20px' }}>
+                        <label style={{ display: 'block', marginBottom: '6px', fontWeight: 500 }}>
+                            Профессия <span style={{ color: 'red' }}>*</span>
+                        </label>
+                        
+                        <select
+                            value={state.formData.occupation}
+                            onChange={(e) =>
+                                formDispatch({
+                                    type: 'UPDATE_FIELD',
+                                    field: 'occupation',
+                                    value: e.target.value,
+                                })
+                            }
+                            style={{
+                                width: '100%',
+                                padding: '10px 12px',
+                                borderRadius: '6px',
+                                border: state.errors.occupation ? '2px solid red' : '1px solid #ccc',
+                                fontSize: '16px',
+                                backgroundColor: 'white',
+                                minHeight: '44px',
+                            }}
+                        >
+                            <option value="" disabled>
+                                Выберите профессию
+                            </option>
+                            {occupations
+                                .filter((occ) => occ.value !== "")
+                                .map((occ) => (
+                                    <option key={occ.value} value={occ.value}>
+                                        {occ.label}
+                                    </option>
+                                ))}
+                        </select>
 
-                    <label
-                        style={{
-                            display: 'flex',
-                            gap: 8,
-                            marginTop: 12,
-                        }}
-                    >
+                        {state.errors.occupation && (
+                            <div style={{ color: 'red', marginTop: '6px', fontSize: '14px' }}>
+                                {state.errors.occupation}
+                            </div>
+                        )}
+                    </div>
+
+                    <label style={{ display: 'flex', gap: 8, marginTop: 12 }}>
                         <input
                             type="checkbox"
                             checked={state.formData.agree}
@@ -430,11 +313,7 @@ function LoginComponent() {
                     </label>
 
                     {state.errors.agree && (
-                        <div
-                            style={{
-                                color: 'red',
-                            }}
-                        >
+                        <div style={{ color: 'red', marginTop: '4px' }}>
                             {state.errors.agree}
                         </div>
                     )}
