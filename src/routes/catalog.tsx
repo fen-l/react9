@@ -14,6 +14,7 @@ import { cartState } from '@/state/cartState';
 import { uiSettingsState } from '@/state/uiSettingsState';
 import { useRecoilValue } from 'recoil';
 import { viewModeSelector } from '@/state/selectors';
+import { getProductChanges, addDeletedProduct } from '@/storage/productStorage';
 
 // Схема для поисковых параметров с валидацией
 const SearchSchema = z.object({
@@ -72,14 +73,42 @@ const fetchProducts = async (page: number, categorySlug: string): Promise<Produc
 
     const response = await fetch(url);
     const data = await response.json();
+    const changes = getProductChanges();
 
-    return {
-        products: data.products.map((product: any) => ProductSchema.parse({
+    const apiProducts: Product[] = data.products.map((product: any): Product =>
+        ProductSchema.parse({
             id: product.id,
             title: product.title,
             price: product.price,
             category: product.category,
-        })),
+        }),
+    );
+
+    const filteredApiProducts = apiProducts.filter(
+        (p) => !changes.deleted.includes(p.id),
+    );
+
+    const mergedApiProducts = filteredApiProducts.map((p) => {
+        const updated = changes.updated.find(
+            (u) => u.id === p.id,
+        );
+
+        return updated ?? p;
+    });
+
+    const filteredCreated = page === 1
+        ? (categorySlug
+            ? changes.created.filter(p => p.category === categorySlug)
+            : changes.created)
+        : [];
+
+    const products = [
+        ...filteredCreated,
+        ...mergedApiProducts,
+    ];
+
+    return {
+        products,
         total: data.total,
         skip: data.skip,
         limit: data.limit,
@@ -210,6 +239,13 @@ function CatalogComponent() {
                 queryClient.setQueryData(['products', page, activeCategorySlug], context.previousData);
             }
             console.error('Delete failed:', err);
+        },
+        onSuccess: (_, deletedId) => {
+            addDeletedProduct(deletedId);
+
+            queryClient.invalidateQueries({
+                queryKey: ['products'],
+            });
         },
     });
 
